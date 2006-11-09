@@ -1,0 +1,11 @@
+kdesvn: KDESvn - a subversion client for KDE with KIO integration
+kdesvn:
+kdesvn: Kdesvn is a subversion client for KDE. It may used as standalone
+kdesvn: application or plugin (KPart). Base functions are provided via a KIO
+kdesvn: protocoll, too. Unlike most other tools, it uses the Subversion
+kdesvn: development API, rather than parsing the output of the command line
+kdesvn: tool.
+kdesvn:
+kdesvn:
+kdesvn: Packaged by Georgi D. Sotirov <gdsotirov@dir.bg>
+kdesvn:
