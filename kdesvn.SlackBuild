@@ -7,7 +7,7 @@
 . /etc/slack-package.conf
 
 NAME=kdesvn
-VERSION=0.13.0
+VERSION=1.0.5
 BUILD=1
 
 cd $TMP
@@ -20,13 +20,13 @@ mkdir $SRC/$NAME-build
 cd $SRC/$NAME-build
 cmake ../ -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_INSTALL_PREFIX=/usr \
-	  -DCMAKE_CXX_FLAGS='-Wall -march=i486 -mtune=i686'
-make
+	  -DCMAKE_CXX_FLAGS='-Wall -march=i486 -mtune=i686' || exit 1
+make || exit 2
 
 PKG="$TMP/package-$NAME"
 mkdir -p $PKG
 
-make DESTDIR=$PKG install
+make DESTDIR=$PKG install || exit 3
 
 bin_perms $PKG
 ( cd $PKG; strip_bin; strip_lib )
