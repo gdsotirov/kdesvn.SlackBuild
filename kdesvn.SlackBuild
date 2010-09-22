@@ -7,7 +7,7 @@
 . ../slack-package.conf
 
 NAME=kdesvn
-VERSION=1.0.6
+VERSION=1.5.5
 BUILD=${BUILD:-1}
 ARCH=${ARCH:-i486}
 
@@ -80,9 +80,9 @@ install -m 644 $CWD/$NAME.SlackBuild $PKG/usr/src/slackbuilds/$NAME-$VERSION
 # Assemble
 cd $PKG
 PKGNAME=$NAME-$VERSION-$ARCH-$BUILD$MYIN
-makepkg -l y -c n $PKG_DIR/$PKGNAME.tgz
+makepkg -l y -c n $PKG_DIR/$PKGNAME.txz
 cd $PKG_DIR
-md5sum $PKGNAME.tgz > $PKGNAME.tgz.md5
+md5sum $PKGNAME.txz > $PKGNAME.txz.md5
 cat $PKG/install/slack-desc > $PKG_DIR/$PKGNAME.txt
 
 # Cleanup (optionally)
