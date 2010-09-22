@@ -4,36 +4,69 @@
 # Written by Georgi D. Sotirov <gdsotirov@dir.bg>
 #
 
-. /etc/slack-package.conf
+. ../slack-package.conf
 
 NAME=kdesvn
-VERSION=1.0.5
-BUILD=1
+VERSION=1.0.6
+BUILD=${BUILD:-1}
+ARCH=${ARCH:-i486}
 
-cd $TMP
-tar -jxvf $CWD/$NAME-$VERSION.tar.bz2
+CWD=${CWD:-`pwd`}
+TMP=${TMP:-/tmp}
+
+if [ ! -e $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+
 SRC=$TMP/$NAME-$VERSION
+if [ -e $SRC -a -d $SRC ]; then
+  echo "Source directory '$SRC' already exists! Plaese, move it or remove it."
+  exit 1
+fi
+
+PKG=$TMP/package-$NAME
+if [ -e $PKG -a -d $PKG ]; then
+  echo "Package creation directory '$PKG' already exists! Please, move it or remove it."
+  exit 2
+fi
+mkdir -p $PKG
+
+# Extract the sources
+cd $TMP
+tar -xvf $CWD/$NAME-$VERSION.tar.bz2 || exit 1
 cd $SRC
 fix_source
 
-mkdir $SRC/$NAME-build
-cd $SRC/$NAME-build
-cmake ../ -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_INSTALL_PREFIX=/usr \
-	  -DCMAKE_CXX_FLAGS='-Wall -march=i486 -mtune=i686' || exit 1
-make || exit 2
+# Configure
+cmake -DCMAKE_BUILD_TYPE=None \
+      -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS -DNDEBUG" \
+      -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS -DNDEBUG" \
+      -DCMAKE_INSTALL_PREFIX=/usr \
+      -DMAN_INSTALL_DIR=/usr/man \
+      -DLIB_SUFFIX=${LIBDIRSUFFIX} \
+      -DCMAKE_VERBOSE_MAKEFILE=1 || exit 2
 
-PKG="$TMP/package-$NAME"
-mkdir -p $PKG
+# Build & install
+make -j4 || exit 3
+make DESTDIR=$PKG install || exit 4
 
-make DESTDIR=$PKG install || exit 3
-
+# Prepare
 bin_perms $PKG
 ( cd $PKG; strip_bin; strip_lib )
-( cd $PKG; mv usr/share/man usr/ )
-gzip_man $PKG
 DOCFILES="$DOCFILES COPYING* TODO*"
 ( cd $SRC; create_docs $PKG $NAME-$VERSION )
+# Assemble documentation in one place
+( cd $PKG/usr/share/doc
+  mv HTML $PKG/usr/doc/$NAME-$VERSION
+  rm -rf $PKG/usr/share/doc )
+# Move man pages installed in wrong place(s)
+install -m 755 -d $PKG/usr/man
+( cd $PKG/usr/share/man/
+  for file in `find . -type f -name *.[123456789]`; do
+    install -D $file $PKG/usr/man/$file
+  done;
+  rm -rf $PKG/usr/share/man )
+gzip_man $PKG
 
 mkdir -p $PKG/install
 install -m 644 $CWD/slack-desc $PKG/install
@@ -44,6 +77,7 @@ install -m 644 $CWD/slack-desc $PKG/usr/src/slackbuilds/$NAME-$VERSION
 install -m 644 $CWD/slack-required $PKG/usr/src/slackbuilds/$NAME-$VERSION
 install -m 644 $CWD/$NAME.SlackBuild $PKG/usr/src/slackbuilds/$NAME-$VERSION
 
+# Assemble
 cd $PKG
 PKGNAME=$NAME-$VERSION-$ARCH-$BUILD$MYIN
 makepkg -l y -c n $PKG_DIR/$PKGNAME.tgz
@@ -51,6 +85,7 @@ cd $PKG_DIR
 md5sum $PKGNAME.tgz > $PKGNAME.tgz.md5
 cat $PKG/install/slack-desc > $PKG_DIR/$PKGNAME.txt
 
+# Cleanup (optionally)
 if [ "$1" == "--cleanup" ]; then
   rm -r $SRC
   rm -r $PKG
