@@ -19,7 +19,7 @@
 #
 # Visit SlackPack at http://sotirov-bg.net/slackpack/
 #
-# $Id: kdesvn.SlackBuild,v 1.9 2018/05/26 12:32:14 gsotirov Exp $
+# $Id: kdesvn.SlackBuild,v 1.10 2018/05/26 14:51:41 gsotirov Exp $
 #
 
 . ../../slack-package.conf
@@ -62,7 +62,7 @@ fi
 
 # Configure
 cmake -LAH \
-      -DCMAKE_BUILD_TYPE=None \
+      -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS -DNDEBUG" \
       -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS -DNDEBUG" \
       -DCMAKE_INSTALL_PREFIX=/usr \
@@ -83,21 +83,16 @@ DOCFILES="$DOCFILES COPYING* TODO*"
 ( cd $PKG/usr/share/doc
   mv HTML $PKG/usr/doc/$NAME-$VERSION
   rm -rf $PKG/usr/share/doc )
-# Move man pages installed in wrong place(s) disregarding MAN_INSTALL_DIR
-install -m 755 -d $PKG/usr/man
-( cd $PKG/usr/share/man/
-  for file in `find . -type f -name *.[123456789]`; do
-    install -D $file $PKG/usr/man/$file
-  done;
-  rm -rf $PKG/usr/share/man )
 gzip_man $PKG
 
 mkdir -p $PKG/install
+install -m 644 $CWD/doinst.sh      $PKG/install/doinst.sh
 install -m 644 $CWD/slack-desc     $PKG/install/slack-desc
 install -m 644 $CWD/slack-required $PKG/install/slack-required
 
 SBDIR=$PKG/usr/src/slackbuilds/$NAME-$VERSION
 mkdir -p $SBDIR
+install -m 644 $CWD/doinst.sh        $SBDIR/doinst.sh
 install -m 644 $CWD/slack-desc       $SBDIR/slack-desc
 install -m 644 $CWD/slack-required   $SBDIR/slack-required
 if [ -e $CWD/$NAME-$VERSION.diff ]; then
