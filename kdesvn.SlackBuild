@@ -19,13 +19,13 @@
 #
 # Visit SlackPack at http://sotirov-bg.net/slackpack/
 #
-# $Id: kdesvn.SlackBuild,v 1.8 2018/05/26 10:23:12 gsotirov Exp $
+# $Id: kdesvn.SlackBuild,v 1.9 2018/05/26 12:32:14 gsotirov Exp $
 #
 
 . ../../slack-package.conf
 
 NAME=kdesvn
-VERSION=1.6.0
+VERSION=1.7.0
 BUILD=${BUILD:-1}
 ARCH=${ARCH:-i486}
 
