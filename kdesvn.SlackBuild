@@ -1,7 +1,25 @@
 #!/bin/sh
 #
-# SlackBuild for kdesvn
-# Written by Georgi D. Sotirov <gdsotirov@dir.bg>
+# Slackware build script for KDESvn
+# Copyright (C) 2006-2018 Georgi D. Sotirov <gdsotirov@dir.bg>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Visit SlackPack at http://sotirov-bg.net/slackpack/
+#
+# $Id: kdesvn.SlackBuild,v 1.7 2018/05/26 09:21:59 gsotirov Exp $
 #
 
 . ../../slack-package.conf
@@ -33,22 +51,28 @@ mkdir -p $PKG
 
 # Extract the sources
 cd $TMP
-tar -xvf $CWD/$NAME-$VERSION.tar.bz2 || exit 1
+tar -xvf $CWD/$NAME-$VERSION.tar.?z* || exit 3
 cd $SRC
 fix_source
 
+# Apply patch(es)
+if [ -e $CWD/$NAME-$VERSION.diff ]; then
+  patch -p1 -b -z.orig < $CWD/$NAME-$VERSION.diff || exit 4
+fi
+
 # Configure
-cmake -DCMAKE_BUILD_TYPE=None \
+cmake -LAH \
+      -DCMAKE_BUILD_TYPE=None \
       -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS -DNDEBUG" \
       -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS -DNDEBUG" \
       -DCMAKE_INSTALL_PREFIX=/usr \
       -DMAN_INSTALL_DIR=/usr/man \
       -DLIB_SUFFIX=${LIBDIRSUFFIX} \
-      -DCMAKE_VERBOSE_MAKEFILE=1 || exit 2
+      -DCMAKE_VERBOSE_MAKEFILE=1 || exit 5
 
 # Build & install
-make -j4 || exit 3
-make DESTDIR=$PKG install || exit 4
+make -j4 || exit 6
+make DESTDIR=$PKG install || exit 7
 
 # Prepare
 bin_perms $PKG
@@ -59,7 +83,7 @@ DOCFILES="$DOCFILES COPYING* TODO*"
 ( cd $PKG/usr/share/doc
   mv HTML $PKG/usr/doc/$NAME-$VERSION
   rm -rf $PKG/usr/share/doc )
-# Move man pages installed in wrong place(s)
+# Move man pages installed in wrong place(s) disregarding MAN_INSTALL_DIR
 install -m 755 -d $PKG/usr/man
 ( cd $PKG/usr/share/man/
   for file in `find . -type f -name *.[123456789]`; do
@@ -69,13 +93,17 @@ install -m 755 -d $PKG/usr/man
 gzip_man $PKG
 
 mkdir -p $PKG/install
-install -m 644 $CWD/slack-desc $PKG/install
-install -m 644 $CWD/slack-required $PKG/install
+install -m 644 $CWD/slack-desc     $PKG/install/slack-desc
+install -m 644 $CWD/slack-required $PKG/install/slack-required
 
-mkdir -p $PKG/usr/src/slackbuilds/$NAME-$VERSION
-install -m 644 $CWD/slack-desc $PKG/usr/src/slackbuilds/$NAME-$VERSION
-install -m 644 $CWD/slack-required $PKG/usr/src/slackbuilds/$NAME-$VERSION
-install -m 644 $CWD/$NAME.SlackBuild $PKG/usr/src/slackbuilds/$NAME-$VERSION
+SBDIR=$PKG/usr/src/slackbuilds/$NAME-$VERSION
+mkdir -p $SBDIR
+install -m 644 $CWD/slack-desc       $SBDIR/slack-desc
+install -m 644 $CWD/slack-required   $SBDIR/slack-required
+if [ -e $CWD/$NAME-$VERSION.diff ]; then
+  install -m 644 $CWD/$NAME-$VERSION.diff $SBDIR/$NAME-$VERSION.diff
+fi
+install -m 644 $CWD/$NAME.SlackBuild $SBDIR/$NAME-$VERSION.SlackBuild
 
 # Assemble
 cd $PKG
